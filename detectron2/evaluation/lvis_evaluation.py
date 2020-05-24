@@ -2,6 +2,7 @@
 import copy
 import itertools
 import json
+import numpy as np	
 import logging
 import os
 import pickle
@@ -36,7 +37,13 @@ class LVISEvaluator(DatasetEvaluator):
             output_dir (str): optional, an output directory to dump results.
         """
         from lvis import LVIS
+        self._logger = logging.getLogger(__name__)	
 
+        self.demapper = False	
+        if self.demapper:	
+            self._logger.info("Using demapper for frequent dat ...")	
+            self.mapper = cate_id_list()[0]	
+            print(self.mapper)
         self._tasks = self._tasks_from_config(cfg)
         self._distributed = distributed
         self._output_dir = output_dir
@@ -121,6 +128,11 @@ class LVISEvaluator(DatasetEvaluator):
             predictions (list[dict]): list of outputs from the model
         """
         self._logger.info("Preparing results in the LVIS format ...")
+        if self.demapper:
+            self._logger.info("Using Demapper ON!")
+            for i, ann in enumerate(self._lvis_results):
+                tmp_cat_id = self.mapper[ann['category_id']] - 1
+                self._lvis_results[i]['category_id'] = tmp_cat_id
         lvis_results = list(itertools.chain(*[x["instances"] for x in predictions]))
 
         # LVIS evaluator can be used to evaluate results for COCO dataset categories.
