@@ -100,6 +100,9 @@ _C.DATASETS.TEST = ()
 _C.DATASETS.PROPOSAL_FILES_TEST = ()
 # Number of top scoring precomputed proposals to keep for test
 _C.DATASETS.PRECOMPUTED_PROPOSAL_TOPK_TEST = 1000
+_C.DATASETS.NUM_CLASSES_F = 400	
+_C.DATASETS.NUM_CLASSES_C = 400	
+_C.DATASETS.NUM_CLASSES_R = 400
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -315,6 +318,23 @@ _C.MODEL.ROI_BOX_CASCADE_HEAD.BBOX_REG_WEIGHTS = (
     (30.0, 30.0, 15.0, 15.0),
 )
 _C.MODEL.ROI_BOX_CASCADE_HEAD.IOUS = (0.5, 0.6, 0.7)
+
+# Parallel Attention Box Head myself definition	
+# ---------------------------------------------------------------------------- #	
+_C.MODEL.ATTENTION_ROI_HEAD = CN()	
+_C.MODEL.ATTENTION_ROI_HEAD.ATTENTION = False	
+_C.MODEL.ATTENTION_ROI_HEAD.CHANNEL_OF_ENHANCED_FEATURE = 256	
+_C.MODEL.ATTENTION_ROI_HEAD.BBOX_REG_WEIGHTS = (	
+    (10.0, 10.0, 5.0, 5.0),	
+    (20.0, 20.0, 10.0, 10.0),	
+    (30.0, 30.0, 15.0, 15.0),	
+)	
+_C.MODEL.ATTENTION_ROI_HEAD.IOUS = (0.5, 0.6, 0.7)	
+_C.MODEL.ATTENTION_ROI_HEAD.SHARED_WEIGHT = False	
+_C.MODEL.ATTENTION_ROI_HEAD.WEIGHTED_CE = False	
+_C.MODEL.ATTENTION_ROI_HEAD.LEARN_WEIGHTED_CE = False	
+_C.MODEL.ATTENTION_ROI_HEAD.KLCE = False	
+_C.MODEL.ATTENTION_ROI_HEAD.SELAYER = False	
 
 
 # ---------------------------------------------------------------------------- #
@@ -558,6 +578,8 @@ _C.TEST.KEYPOINT_OKS_SIGMAS = []
 # Maximum number of detections to return per image during inference (100 is
 # based on the limit established for the COCO dataset).
 _C.TEST.DETECTIONS_PER_IMAGE = 100
+_C.TEST.KEEP_ANNS = False	
+_C.TEST.CAL_ACC = False
 
 _C.TEST.AUG = CN({"ENABLED": False})
 _C.TEST.AUG.MIN_SIZES = (400, 500, 600, 700, 800, 900, 1000, 1100, 1200)
