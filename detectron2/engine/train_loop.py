@@ -213,7 +213,17 @@ class SimpleTrainer(TrainerBase):
         If you want to do something with the losses, you can wrap the model.
         """
         loss_dict = self.model(data)
-        losses = sum(loss_dict.values())
+        ## scheduler	
+        ratio = float(self.iter) / self.max_iter	
+        bce_rate = 1. - ratio ** 2.	
+        bce_g_rate = 1. - bce_rate	
+
+#         if 'loss_cls_BCE_stage1' in loss_dict.keys():	
+#             loss_dict['loss_cls_BCE_stage1'] *= bce_rate	
+#             loss_dict['loss_cls_BCE_g_stage1'] *= bce_g_rate	
+
+        losses = sum(loss for loss in loss_dict.values())
+    
         self._detect_anomaly(losses, loss_dict)
 
         metrics_dict = loss_dict
