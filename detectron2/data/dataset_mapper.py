@@ -44,6 +44,7 @@ class DatasetMapper:
 
         # fmt: off
         self.img_format     = cfg.INPUT.FORMAT
+        self.keep_ann       = cfg.TEST.KEEP_ANNS
         self.mask_on        = cfg.MODEL.MASK_ON
         self.mask_format    = cfg.INPUT.MASK_FORMAT
         self.keypoint_on    = cfg.MODEL.KEYPOINT_ON
@@ -108,7 +109,7 @@ class DatasetMapper:
                 dataset_dict, image_shape, transforms, self.min_box_side_len, self.proposal_topk
             )
 
-        if not self.is_train:
+        if not self.is_train and not self.keep_ann:
             # USER: Modify this if you want to keep them for some reason.
             dataset_dict.pop("annotations", None)
             dataset_dict.pop("sem_seg_file_name", None)
