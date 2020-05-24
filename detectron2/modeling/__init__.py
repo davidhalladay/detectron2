@@ -37,6 +37,8 @@ from .roi_heads import (
     ROI_MASK_HEAD_REGISTRY,
     ROIHeads,
     StandardROIHeads,
+    AttentionROIHeads,	    
+    CascadeFREQROIHeads,
     BaseMaskRCNNHead,
     BaseKeypointRCNNHead,
     build_box_head,
