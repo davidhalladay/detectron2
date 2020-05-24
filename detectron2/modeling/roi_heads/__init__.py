@@ -12,5 +12,6 @@ from .roi_heads import (
 )
 from .rotated_fast_rcnn import RROIHeads
 from .fast_rcnn import FastRCNNOutputLayers
-
+from .attention_roi_head import AttentionROIHeads
+from .cascade_freq_rcnn import CascadeFREQROIHeads
 from . import cascade_rcnn  # isort:skip
