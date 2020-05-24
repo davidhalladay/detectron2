@@ -14,7 +14,7 @@ from ..proposal_generator import build_proposal_generator
 from ..roi_heads import build_roi_heads
 from .build import META_ARCH_REGISTRY
 
-__all__ = ["GeneralizedRCNN", "ProposalNetwork"]
+__all__ = ["GeneralizedRCNN", "ProposalNetwork", "ParallelRCNN"]
 
 
 @META_ARCH_REGISTRY.register()
@@ -32,8 +32,18 @@ class GeneralizedRCNN(nn.Module):
         self.backbone = build_backbone(cfg)
         self.proposal_generator = build_proposal_generator(cfg, self.backbone.output_shape())
         self.roi_heads = build_roi_heads(cfg, self.backbone.output_shape())
+        self.mute_RPN_BACKBONE = False
+        if cfg.MODEL.ATTENTION_ROI_HEAD.KLCE:
+            self.mute_RPN_BACKBONE = True
+        if self.mute_RPN_BACKBONE == True:	
+            logger.info("Parameters in self.proposal_generator are fixed!!")	
+            for param in self.backbone.parameters():	
+                    param.requires_grad = False	
+            for param in self.proposal_generator.parameters():	
+                    param.requires_grad = False
         self.vis_period = cfg.VIS_PERIOD
         self.input_format = cfg.INPUT.FORMAT
+        self.test_keep_anns = cfg.TEST.KEEP_ANNS
 
         assert len(cfg.MODEL.PIXEL_MEAN) == len(cfg.MODEL.PIXEL_STD)
         self.register_buffer("pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1))
@@ -135,7 +145,8 @@ class GeneralizedRCNN(nn.Module):
 
         losses = {}
         losses.update(detector_losses)
-        losses.update(proposal_losses)
+        if self.mute_RPN_BACKBONE == False:
+            losses.update(proposal_losses)
         return losses
 
     def inference(self, batched_inputs, detected_instances=None, do_postprocess=True):
@@ -159,7 +170,10 @@ class GeneralizedRCNN(nn.Module):
 
         images = self.preprocess_image(batched_inputs)
         features = self.backbone(images.tensor)
-
+        if self.test_keep_anns and "instances" in batched_inputs[0]:	
+            gt_instances = [x["instances"].to(self.device) for x in batched_inputs]	
+        else:	
+            gt_instances = None
         if detected_instances is None:
             if self.proposal_generator:
                 proposals, _ = self.proposal_generator(images, features, None)
@@ -167,7 +181,7 @@ class GeneralizedRCNN(nn.Module):
                 assert "proposals" in batched_inputs[0]
                 proposals = [x["proposals"].to(self.device) for x in batched_inputs]
 
-            results, _ = self.roi_heads(images, features, proposals, None)
+            results, _ = self.roi_heads(images, features, proposals, gt_instances)
         else:
             detected_instances = [x.to(self.device) for x in detected_instances]
             results = self.roi_heads.forward_with_given_boxes(features, detected_instances)
