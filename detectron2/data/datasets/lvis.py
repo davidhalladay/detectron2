@@ -9,6 +9,7 @@ from detectron2.structures import BoxMode
 
 from .builtin_meta import _get_coco_instances_meta
 from .lvis_v0_5_categories import LVIS_CATEGORIES
+from .lvis_categories_mapper import lvis_cate_mapper, cate_id_list
 
 """
 This file contains functions to parse LVIS-format annotations into dicts in the
@@ -36,7 +37,7 @@ def register_lvis_instances(name, metadata, json_file, image_root):
     )
 
 
-def load_lvis_json(json_file, image_root, dataset_name=None):
+def load_lvis_json(json_file, image_root, dataset_name=None, freq_reindex = False):
     """
     Load a json file in LVIS's annotation format.
 
@@ -58,7 +59,7 @@ def load_lvis_json(json_file, image_root, dataset_name=None):
     from lvis import LVIS
 
     json_file = PathManager.get_local_path(json_file)
-
+    fcr_mapper = lvis_cate_mapper()
     timer = Timer()
     lvis_api = LVIS(json_file)
     if timer.seconds() > 1:
@@ -104,7 +105,10 @@ def load_lvis_json(json_file, image_root, dataset_name=None):
     imgs_anns = list(zip(imgs, anns))
 
     logger.info("Loaded {} images in the LVIS format from {}".format(len(imgs_anns), json_file))
-
+    if args.ann_reindex:	
+        logger.info("Note!!! Reindex 1230 classes into f, c, r 3 Classes head")	
+        
+    f_id_list, c_id_list, r_id_list, _, _ = cate_id_list()
     dataset_dicts = []
 
     for (img_dict, anno_dict_list) in imgs_anns:
@@ -130,6 +134,19 @@ def load_lvis_json(json_file, image_root, dataset_name=None):
             assert anno["image_id"] == image_id
             obj = {"bbox": anno["bbox"], "bbox_mode": BoxMode.XYWH_ABS}
             obj["category_id"] = anno["category_id"] - 1  # Convert 1-indexed to 0-indexed
+            obj["frequency"] = fcr_mapper[anno["category_id"]]	
+
+#             logger.info("Note!!! split 1230 classes into f, c, r")	
+            if args.ann_reindex:	
+                if obj["frequency"] == 0:	
+                    obj["category_id"] = f_id_list.index(obj["category_id"]+1)	
+#                     test_f.add(obj["category_id"])	
+                if obj["frequency"] == 1:	
+                    obj["category_id"] = c_id_list.index(obj["category_id"]+1)	
+#                     test_c.add(obj["category_id"])	
+                if obj["frequency"] == 2:	
+                    obj["category_id"] = r_id_list.index(obj["category_id"]+1)	
+#                     test_r.add(obj["category_id"])
             segm = anno["segmentation"]  # list[list[float]]
             # filter out invalid polygons (< 3 points)
             valid_segm = [poly for poly in segm if len(poly) % 2 == 0 and len(poly) >= 6]
