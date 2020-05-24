@@ -4,7 +4,8 @@
 from .build import META_ARCH_REGISTRY, build_model  # isort:skip
 
 from .panoptic_fpn import PanopticFPN
-
+from .parallel_rcnn import ParallelRCNN	
+from .parallel_attention_rcnn import ParallelAttRCNN
 # import all the meta_arch, so they will be registered
 from .rcnn import GeneralizedRCNN, ProposalNetwork
 from .retinanet import RetinaNet
